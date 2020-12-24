@@ -137,7 +137,9 @@ class RequestHandler {
       if (res.status === 429) {
         // A ratelimit was hit - this should never happen
         const body = await res.json();
-        this.manager.client.emit('debug', `429 hit on route ${request.route} | RetryAfter: ${this.retryAfter} ms or s | Limit: ${this.limit} | Remaining: ${this.remaining}`);
+        const log = `429 hit on route ${request.route} | Server: ${res.headers.get('server') || "No Server Header"} | RetryAfter: ${this.retryAfter} s or ms | Limit: ${this.limit} | Remaining: ${this.remaining}`;
+        this.manager.client.emit('debug', log);
+        this.manager.client.logger.warn(log);
         await Util.delayFor(this.retryAfter * (body?.message?.includes("You are being blocked") ? 1000 : 1));
         return this.execute(request);
       }
